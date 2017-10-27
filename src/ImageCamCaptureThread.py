@@ -20,7 +20,7 @@ class WebCamVideoStream:
 			(self.grabbed, self.frame) = self.stream.read()
 
 	def read(self):
-		return self.frame
+		return self.frame.copy()
 
 	def notEmpty(self):
 		return self.grabbed
