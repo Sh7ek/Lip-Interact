@@ -11,7 +11,7 @@ sock.connect(server_address)
 try:
 	# Send data
 	while True:
-		message = raw_input("Enter lip command: ") + "\n"
+		message = input("Enter lip command: ") + "\n"
 		sock.send(message)
 		# sleep(1)
 

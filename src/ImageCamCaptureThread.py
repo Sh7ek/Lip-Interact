@@ -6,8 +6,8 @@ class WebCamVideoStream:
 		self.stream = cv2.VideoCapture(src)
 		(self.grabbed, self.frame) = self.stream.read()
 		self.stopped = False
-		# cap.set(3, 640)
-		# cap.set(4, 480)
+		self.stream.set(3, 640)
+		self.stream.set(4, 480)
 		print ("width: " + str(self.stream.get(3)))
 		print ("height: " + str(self.stream.get(4)))
 
