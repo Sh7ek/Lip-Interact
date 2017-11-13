@@ -43,7 +43,7 @@ for i in range(0, len(content)):
         stdGap = math.sqrt(sum([(x-meanGap)**2 for x in gapDeque]) / gapDeque.maxlen)
         # the user is not speaking
         if not speaking:
-            if gapFeature > max(max_limit * 1.5, 0.1):  # maybe is starting speaking, stop updating max_limit
+            if gapFeature > max(max_limit * 1.75, 0.1):  # maybe is starting speaking, stop updating max_limit
                 speaking = True
                 start_speaking_index = i
             elif maxGap < max(max_limit, 0.1) and stdGap < std_limit:

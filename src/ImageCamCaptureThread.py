@@ -8,8 +8,8 @@ class WebCamVideoStream:
 		self.stopped = False
 		self.stream.set(3, 640)
 		self.stream.set(4, 480)
-		print ("width: " + str(self.stream.get(3)))
-		print ("height: " + str(self.stream.get(4)))
+		print("width: " + str(self.stream.get(3)))
+		print("height: " + str(self.stream.get(4)))
 
 	def start(self):
 		Thread(target=self.update, args=()).start()
@@ -20,7 +20,8 @@ class WebCamVideoStream:
 			(self.grabbed, self.frame) = self.stream.read()
 
 	def read(self):
-		return self.frame.copy()
+		return cv2.flip(self.frame, 1)
+		# return self.frame.copy()
 
 	def notEmpty(self):
 		return self.grabbed

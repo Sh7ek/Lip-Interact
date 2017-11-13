@@ -1,12 +1,8 @@
 import numpy as np
 
-a = np.array([[1, 2], [3, 4], [5, 6]]);
+X1 = [[0.5], [1.0], [-1.0], [0.42], [0.24]]
+X2 = [[2.4], [4.2], [0.5], [-0.24]]
 
-print(a)
-print(a.shape[0])
-print(a.shape[1])
+X = np.concatenate([X1, X2])
 
-mouth_centroid = np.mean(a[:, -2:], axis=0)
-print(mouth_centroid)
-
-print(a[:, :-1])
+print(X)

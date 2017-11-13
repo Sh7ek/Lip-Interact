@@ -10,8 +10,10 @@ from collections import deque
 from src.ImageWrite2FileThread import Write2File
 
 COLLECT_DATA = True
+USER_ADJUSTED = False  # always false at first
 
-USER_ADJUSTED = False
+subject = "sk"
+gestureID = 12
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("../resource/shape_predictor_68_face_landmarks.dat")
@@ -20,17 +22,18 @@ video_stream = WebCamVideoStream(src=0).start()
 fps = FPS().start()
 
 if COLLECT_DATA:
-    writeFileThread = Write2File().start()
+    writeFileThread = Write2File(subject=subject, gestureID=gestureID).start()
 
 cv2.namedWindow("frame");
-cv2.moveWindow("frame", 700, 100);
+cv2.moveWindow("frame", 400, 100);
 cv2.namedWindow("mouth_crop");
-cv2.moveWindow("mouth_crop", 700, 620);
+cv2.moveWindow("mouth_crop", 400, 620);
 
 last_image = np.zeros(shape=(480, 640, 3), dtype=np.uint8);
 force_detect_face = True
 face_rect = dlib.rectangle(left=0, top=0, right=0, bottom=0)
-shape_margin = 12
+shape_margin_h = 6
+shape_margin_v = 12
 face_limit = 200
 
 # gap_feature_list = []
@@ -139,10 +142,10 @@ if __name__ == '__main__':
 
                 # estimate the next face_rect by shape of this frame to save time
                 face_rect = dlib.rectangle(
-                    left=shape_x - shape_margin,
-                    top=shape_y - shape_margin,
-                    right=shape_x + shape_w + shape_margin,
-                    bottom=shape_y + shape_h - shape_margin)
+                    left=shape_x - shape_margin_h,
+                    top=shape_y - shape_margin_v,
+                    right=shape_x + shape_w + shape_margin_h,
+                    bottom=shape_y + shape_h - shape_margin_v)
                 if face_rect.right() - face_rect.left() < face_limit or face_rect.bottom() - face_rect.top() < face_limit:
                     force_detect_face = True
 
@@ -174,7 +177,7 @@ if __name__ == '__main__':
                     elif speakingState == 3:
                         # recognize what the user has spoken
                         # print(len(speakingNormalizedCropMouthList))
-                        if len(speakingNormalizedLipPointsList) > gap_window_len + 18:  # a speech has to be over 1 second
+                        if len(speakingNormalizedLipPointsList) > gap_window_len + 10:  # a speech has to be over 1 second
                             count += 1
                             if COLLECT_DATA and USER_ADJUSTED:
                                 writeFileThread.setData(speakingNormalizedCropMouthList, speakingNormalizedLipPointsList, count)
@@ -214,6 +217,8 @@ if __name__ == '__main__':
             elif key == ord('u'):
                 USER_ADJUSTED = True
                 count = 0
+            elif key == ord('r'):
+                count = max(0, count-1)
 
     fps.stop()
     print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
