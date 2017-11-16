@@ -1,8 +1,9 @@
 import pprint, pickle
 import cv2
+from time import sleep
 
-outputFolder = "../resource/data/sk/1/"
-outputFileIndex = 6
+outputFolder = "../resource/data/xwj/2/"
+outputFileIndex = 10
 image_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_image.pkl", 'rb')
 mouth_image_list = pickle.load(image_pkl_file)
 image_pkl_file.close()
@@ -27,7 +28,11 @@ while True:
 
     cv2.imshow('frame', image)
 
-    key = cv2.waitKey(0) & 0xFF
+    sleep(0.04)
+    key = cv2.waitKey(1) & 0xFF
+    i = min(len(mouth_image_list) - 1, i + 1)
+
+    # key = cv2.waitKey(0) & 0xFF
     if key == ord('j'):
         i = max(0, i-1)
     elif key == ord('k'):

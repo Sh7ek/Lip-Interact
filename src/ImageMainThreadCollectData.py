@@ -12,7 +12,7 @@ from src.ImageWrite2FileThread import Write2File
 COLLECT_DATA = True
 USER_ADJUSTED = False  # always false at first
 
-subject = "sk"
+subject = "swn"
 gestureID = 12
 
 detector = dlib.get_frontal_face_detector()
@@ -195,12 +195,12 @@ if __name__ == '__main__':
                     # cv2.rectangle(image, (mouth_x, mouth_y), (mouth_x + mouth_w, mouth_y + mouth_h), (255, 0, 0), 2)
                     cv2.rectangle(image, (stable_mouth_crop_left, stable_mouth_crop_top),
                                   (stable_mouth_crop_left + stable_mouth_crop_width,
-                                   stable_mouth_crop_top + stable_mouth_crop_height), (0, 0, 255), 2)
+                                   stable_mouth_crop_top + stable_mouth_crop_height), (0, 0, 255), 4)
                 else:
                     # cv2.rectangle(image, (mouth_x, mouth_y), (mouth_x + mouth_w, mouth_y + mouth_h), (0, 255, 0), 2)
                     cv2.rectangle(image, (stable_mouth_crop_left, stable_mouth_crop_top),
                                   (stable_mouth_crop_left + stable_mouth_crop_width,
-                                   stable_mouth_crop_top + stable_mouth_crop_height), (0, 255, 0), 2)
+                                   stable_mouth_crop_top + stable_mouth_crop_height), (0, 255, 0), 4)
                 for (x, y) in lip_array[12:20]:
                     cv2.circle(image, (x, y), 2, (255, 255, 255), -1)
                 fps.update()
