@@ -3,7 +3,7 @@ import cv2
 from time import sleep
 import os
 
-outputFolder = "../resource/data/ztx/9/"
+outputFolder = "../resource/data/sk/4/"
 
 cv2.namedWindow("frame");
 cv2.moveWindow("frame", 1000, 400);
@@ -15,7 +15,7 @@ while outputFileIndex < 25:
         print("file index: " + str(outputFileIndex))
         image_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_image.pkl", 'rb')
         mouth_image_list = pickle.load(image_pkl_file)
-        mouth_image_list = mouth_image_list[0:len(mouth_image_list)-5]
+        # mouth_image_list = mouth_image_list[0:len(mouth_image_list)-5]
         image_pkl_file.close()
 
         lip_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_lip.pkl", 'rb')

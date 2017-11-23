@@ -12,8 +12,8 @@ from src.ImageWrite2FileThread import Write2File
 COLLECT_DATA = True
 USER_ADJUSTED = False  # always false at first
 
-subject = "swn"
-gestureID = 12
+subject = "test"
+gestureID = 4
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("../resource/shape_predictor_68_face_landmarks.dat")
