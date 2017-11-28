@@ -3,26 +3,30 @@ import cv2
 from time import sleep
 import os
 
-outputFolder = "../resource/data/sk/4/"
+outputFolder = "../resource/data/sk/12/"
 
 cv2.namedWindow("frame");
 cv2.moveWindow("frame", 1000, 400);
 
 outputFileIndex = 1
+maxLength = 0
 while outputFileIndex < 25:
     image_pkl_file_path = outputFolder + "frame_" + str(outputFileIndex) + "_image.pkl"
     if os.path.isfile(image_pkl_file_path):
         print("file index: " + str(outputFileIndex))
         image_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_image.pkl", 'rb')
+        image_pkl_file.seek(0)
         mouth_image_list = pickle.load(image_pkl_file)
-        # mouth_image_list = mouth_image_list[0:len(mouth_image_list)-5]
+        valid_len = min(len(mouth_image_list), 70)
+        mouth_image_list = mouth_image_list[0:valid_len]
         image_pkl_file.close()
 
         lip_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_lip.pkl", 'rb')
         mouth_lip_list = pickle.load(lip_pkl_file)
         lip_pkl_file.close()
 
-        print(len(mouth_image_list))
+        maxLength = max(maxLength, len(mouth_image_list))
+        print("len: {}    max-len: {}".format(len(mouth_image_list), maxLength))
         # print(len(mouth_lip_list))
 
         for i in range(0, len(mouth_image_list)):
