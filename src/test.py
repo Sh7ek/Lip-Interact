@@ -1,15 +1,10 @@
-import pprint, pickle
-import os
+from collections import deque
 import numpy as np
 
-a = np.array([1, 2])
-b = np.array([3, 4])
-l = [a, b]
-print(l)
-c = np.array([5, 6])
-l.append(c)
-print(l)
-la = np.asarray(l, dtype=np.float32)
-print(la)
-print(la.dtype)
+
+if __name__ == '__main__':
+    X = np.zeros((10, 2, 2))
+    X[13:10] = np.array([[1, 2], [3, 4]])
+    print(X)
+
 

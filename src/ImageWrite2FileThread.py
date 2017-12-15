@@ -8,10 +8,9 @@ class Write2File:
         self.newArrival = False
         self.stopped = False
         self.mouthFrameList = []
-        self.lipPointList = []
         self.writeDone = False
         self.outputFileIndex = 0
-        self.outputFolder = "../resource/data/" + subject + "/" + str(gestureID) + "/"
+        self.outputFolder = "../resource/data_new/" + subject + "/" + str(gestureID) + "/"
         if not os.path.exists(self.outputFolder):
             os.mkdir(self.outputFolder)
         print("Write To File Init ...")
@@ -28,10 +27,7 @@ class Write2File:
                 output = open(outputFileName, 'wb')
                 pickle.dump(self.mouthFrameList, output)
                 output.close()
-                outputFileName = self.outputFolder + "frame_" + str(self.outputFileIndex) + "_lip.pkl"
-                output = open(outputFileName, 'wb')
-                pickle.dump(self.lipPointList, output)
-                output.close()
+
                 # print("write to file done {}".format(len(self.mouthFrameList)))
                 self.writeDone = True
                 self.newArrival = False
@@ -40,9 +36,8 @@ class Write2File:
     def stop(self):
         self.stopped = True
 
-    def setData(self, userMouthFrameList, userLipPointList, count):
+    def setData(self, userMouthFrameList, count):
         self.mouthFrameList = userMouthFrameList[:]
-        self.lipPointList = userLipPointList[:]
         self.outputFileIndex = count
         self.newArrival = True
 

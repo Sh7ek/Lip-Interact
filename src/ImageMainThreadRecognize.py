@@ -7,27 +7,31 @@ from imutils import face_utils
 import numpy as np
 import math
 from collections import deque
-from src.ImageWrite2FileThread import Write2File
+from src.ImageLipNetRecognizeThread import RecognizeThread
 
-COLLECT_DATA = True
-USER_ADJUSTED = False  # always false at first
+RECOGNIZER = True
+# USER_ADJUSTED = False  # always false at first
 
-subject = "sk"
-gestureID = 43
+subject = "test"
+gestureID = 4
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("../resource/shape_predictor_68_face_landmarks.dat")
 
 video_stream = WebCamVideoStream(src=0).start()
-fps = FPS().start()
+FPS_STARTED = False
 
-if COLLECT_DATA:
-    writeFileThread = Write2File(subject=subject, gestureID=gestureID).start()
+if RECOGNIZER:
+    recognizeThread = RecognizeThread().start()
+recognizeResult = 0
+recognizeResultStr = ""
+list_gestures = ['da kai wei xin', 'da kai xiang ji', 'da kai liu lan qi', 'fan hui', 'fan hui zhuo mian', 'qu xiao',
+                 'hao de', 'sou suo', 'zui jin ying yong', 'jie ping', 'zi pai']
 
 cv2.namedWindow("frame");
-cv2.moveWindow("frame", 650, 100);
-cv2.namedWindow("mouth_crop");
-cv2.moveWindow("mouth_crop", 850, 620);
+cv2.moveWindow("frame", 400, 100);
+# cv2.namedWindow("mouth_crop");
+# cv2.moveWindow("mouth_crop", 400, 620);
 
 last_image = np.zeros(shape=(480, 640, 3), dtype=np.uint8);
 force_detect_face = True
@@ -49,7 +53,7 @@ stable_mouth_crop_right = 0
 stable_mouth_crop_width = 0
 stable_mouth_crop_top = 0
 stable_mouth_crop_height = 0
-HORIZANTAL_PAD_RATIO = 0.15
+HORIZANTAL_PAD_RATIO = 0.1
 MOUTH_CROP_WIDTH = 100
 MOUTH_CROP_HEIGHT = 80
 normalize_ratio = None
@@ -58,19 +62,21 @@ speakingNormalizedCropMouthList = []
 speakingState = 0  # 0: not speaking stable, 1: detect start to speak 2: speaking 3: detect stop speaking
 noSpeakingNormalizedCropMouthDeque = deque([], maxlen=gap_window_len)
 
-# speakingNormalizedLipPointsList = []
-# noSpeakingNormalizedLipPointsDeque = deque([], maxlen=gap_window_len)
-
 if __name__ == '__main__':
-    count = 0
     # while True:
     while True:
         image = video_stream.read()
         if video_stream.notEmpty() and (not np.array_equal(image, last_image)):  # cannot be omitted, because the first frame may be empty on the camera
-            if COLLECT_DATA:
-                if writeFileThread.getDone():
-                    print("--------------------------")
-                    writeFileThread.setNotDone()
+            if RECOGNIZER:
+                if recognizeThread.model_loaded and not FPS_STARTED:
+                    fps = FPS().start()
+                    FPS_STARTED = True
+
+                if recognizeThread.recognize_complete():  # has just recognized once
+                    # print("--------------------------")
+                    recognizeThread.reset_recognize_state()
+                    recognizeResult = recognizeThread.y_predict
+                    recognizeResultStr = list_gestures[recognizeResult-1]
 
             last_image = image.copy()
             # when we need to detect the face with dlib
@@ -121,11 +127,11 @@ if __name__ == '__main__':
                             stable_mouth_crop_right = int(mouth_x + mouth_w * (1 + HORIZANTAL_PAD_RATIO))
                             stable_mouth_crop_width = stable_mouth_crop_right - stable_mouth_crop_left
                             stable_mouth_crop_height = int(round(stable_mouth_crop_width * float(MOUTH_CROP_HEIGHT)/float(MOUTH_CROP_WIDTH)))
-                            stable_mouth_crop_top = int(round(mouth_y + mouth_h/2 - stable_mouth_crop_height * 0.36))
+                            stable_mouth_crop_top = int(round(mouth_y + mouth_h/2 - stable_mouth_crop_height / 3))
                     # If the user is speaking
                     else:
                         # If the user stops speaking
-                        if maxGap < min(gap_max_limit, 0.1) and stdGap < gap_std_limit:  # has stopped speaking
+                        if maxGap < min(gap_max_limit, 0.1) and stdGap < gap_std_limit * 0.5:  # has stopped speaking
                             # end_speaking_index = i
                             isSpeaking = False
                             gap_max_limit = meanGap * 2
@@ -135,7 +141,7 @@ if __name__ == '__main__':
                             stable_mouth_crop_right = int(mouth_x + mouth_w * (1 + HORIZANTAL_PAD_RATIO))
                             stable_mouth_crop_width = stable_mouth_crop_right - stable_mouth_crop_left
                             stable_mouth_crop_height = int(round(stable_mouth_crop_width * float(MOUTH_CROP_HEIGHT)/float(MOUTH_CROP_WIDTH)))
-                            stable_mouth_crop_top = int(round(mouth_y + mouth_h / 2 - stable_mouth_crop_height * 0.36))
+                            stable_mouth_crop_top = int(round(mouth_y + mouth_h / 2 - stable_mouth_crop_height / 3))
                         # the user continues speaking
                         else:
                             speakingState = 2
@@ -158,39 +164,32 @@ if __name__ == '__main__':
                     normalized_mouth_crop_image = normalized_image[normalized_mouth_crop_top:normalized_mouth_crop_top + MOUTH_CROP_HEIGHT,
                                                   normalized_mouth_crop_left:normalized_mouth_crop_left + MOUTH_CROP_WIDTH]
                     # print(normalized_mouth_crop_image.shape)
-                    cv2.imshow('mouth_crop', normalized_mouth_crop_image)
+                    # cv2.imshow('mouth_crop', normalized_mouth_crop_image)
 
                     # normalized_lip_array = (lip_array-[stable_mouth_crop_left, stable_mouth_crop_top]) * normalize_ratio
 
                     # get the crop mouth frame list when user is speaking
                     if speakingState == 0:
                         noSpeakingNormalizedCropMouthDeque.append(normalized_mouth_crop_image)
-                        # noSpeakingNormalizedLipPointsDeque.append(normalized_lip_array)
                     elif speakingState == 1:
                         speakingNormalizedCropMouthList = list(noSpeakingNormalizedCropMouthDeque)
                         speakingNormalizedCropMouthList.append(normalized_mouth_crop_image)
-                        # speakingNormalizedLipPointsList = list(noSpeakingNormalizedLipPointsDeque)
-                        # speakingNormalizedLipPointsList.append(normalized_lip_array)
                     elif speakingState == 2:
                         speakingNormalizedCropMouthList.append(normalized_mouth_crop_image)
-                        # speakingNormalizedLipPointsList.append(normalized_lip_array)
                     elif speakingState == 3:
                         # recognize what the user has spoken
                         # print(len(speakingNormalizedCropMouthList))
                         if len(speakingNormalizedCropMouthList) > gap_window_len + 10:  # a speech has to be over 1 second
-                            count += 1
-                            if COLLECT_DATA and USER_ADJUSTED:
-                                writeFileThread.setData(speakingNormalizedCropMouthList, count)
+                            if RECOGNIZER:
+                                recognizeThread.setData(speakingNormalizedCropMouthList)
                         # then reset the list
                         speakingNormalizedCropMouthList = []
                         noSpeakingNormalizedCropMouthDeque.clear()
-                        # speakingNormalizedLipPointsList = []
-                        # noSpeakingNormalizedLipPointsDeque.clear()
                         speakingState = 0
 
                 #  Display the resulting frame
-                cv2.rectangle(image, (face_x, face_y), (face_x + face_w, face_y + face_h), (0, 255, 0), 2)
-                # print("{} {} {} {}".format(stable_mouth_crop_left, stable_mouth_crop_top, stable_mouth_crop_width, stable_mouth_crop_height))
+                # cv2.rectangle(image, (face_x, face_y), (face_x + face_w, face_y + face_h), (0, 255, 0), 2)
+
                 if isSpeaking:
                     # cv2.rectangle(image, (mouth_x, mouth_y), (mouth_x + mouth_w, mouth_y + mouth_h), (255, 0, 0), 2)
                     cv2.rectangle(image, (stable_mouth_crop_left, stable_mouth_crop_top),
@@ -203,9 +202,11 @@ if __name__ == '__main__':
                                    stable_mouth_crop_top + stable_mouth_crop_height), (0, 255, 0), 4)
                 for (x, y) in lip_array[12:20]:
                     cv2.circle(image, (x, y), 2, (255, 255, 255), -1)
-                fps.update()
 
-            cv2.putText(image, str(count), (50, 100), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 2, cv2.LINE_AA)
+                if recognizeThread.model_loaded and FPS_STARTED:
+                    fps.update()
+
+            cv2.putText(image, recognizeResultStr, (50, 100), cv2.FONT_HERSHEY_COMPLEX, 1.6, (0, 255, 0), 2, cv2.LINE_AA)
             cv2.imshow('frame', image)
             # Press Q on keyboard to stop
             # Press F on keyboard to force face re-detection on the next frame
@@ -214,19 +215,14 @@ if __name__ == '__main__':
                 break
             elif key == ord('f'):
                 force_detect_face = True
-            elif key == ord('u'):
-                USER_ADJUSTED = True
-                count = 0
-            elif key == ord('r'):
-                count = max(0, count-1)
 
     fps.stop()
     print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
     print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
     video_stream.stop()
-    if COLLECT_DATA:
-        writeFileThread.stop()
+    if RECOGNIZER:
+        recognizeThread.stop()
     cv2.destroyAllWindows()
 
     # file = open("../resource/gap_feature.txt", "w")
