@@ -10,7 +10,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 
 class LipNet(object):
-    def __init__(self, frames_n=70, img_h=80, img_w=100, img_c=3, output_n=11):
+    def __init__(self, frames_n=70, img_h=80, img_w=100, img_c=3, output_n=10):
         self.img_c = img_c
         self.img_w = img_w
         self.img_h = img_h
@@ -75,7 +75,7 @@ class LipNet(object):
         Model(inputs=self.input_data, outputs=self.prediction).summary()
 
     def compile(self):
-        adam = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+        adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
         self.model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
 

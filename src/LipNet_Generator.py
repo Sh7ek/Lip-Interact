@@ -6,7 +6,7 @@ from keras.preprocessing import sequence
 
 class DataGenerator(object):
     # If the shuffle option is True, the generator shuffles the order of exploration of the samples before each new epoch.
-    def __init__(self, class_n = 11, frames_n=70, img_h=80, img_w=100, img_c=3, batch_size=32, shuffle=True):
+    def __init__(self, class_n=10, frames_n=70, img_h=80, img_w=100, img_c=3, batch_size=32, shuffle=True, gestureIDs=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
         self.class_n = class_n
         self.frames_n = frames_n
         self.img_h = img_h
@@ -14,6 +14,7 @@ class DataGenerator(object):
         self.img_c = img_c
         self.shuffle = shuffle
         self.batch_size = batch_size
+        self.gestureIDs = gestureIDs
 
     # generate the next batch of data
     def generate(self, list_IDs):
@@ -57,25 +58,38 @@ class DataGenerator(object):
             # ID, aka file name format : "sk_flip-7-frame_11_image.pkl"
             subject, gestureId, filename = ID.split("-")
 
-            file_path = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
+            file_path = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
             image_pkl_file = open(file_path, 'rb')
             mouth_image_array = pickle.load(image_pkl_file).astype(dtype=np.float32)  # frame_n, img_h, img_w, img_c
             image_pkl_file.close()
 
             frame_n_temp = min(mouth_image_array.shape[0], self.frames_n)
-            X[i, 0:frame_n_temp, :, :, :] = mouth_image_array[0:frame_n_temp, :, :, :]
-            X[i, frame_n_temp:self.frames_n] = mouth_image_array[mouth_image_array.shape[0]-1]  # padding the training instance with the last valid frame
 
-            y[i] = int(gestureId)
-            if y[i] > 6:
-                y[i] -= 1
+            # normailize image by (X-X_Mean)/X_Std
+            r_mean = np.mean(mouth_image_array[0:frame_n_temp, :, :, 0])
+            g_mean = np.mean(mouth_image_array[0:frame_n_temp, :, :, 1])
+            b_mean = np.mean(mouth_image_array[0:frame_n_temp, :, :, 2])
+
+            r_std = np.std(mouth_image_array[0:frame_n_temp, :, :, 0])
+            g_std = np.std(mouth_image_array[0:frame_n_temp, :, :, 1])
+            b_std = np.std(mouth_image_array[0:frame_n_temp, :, :, 2])
+
+            mouth_image_array[0:frame_n_temp, :, :, 0] = (mouth_image_array[0:frame_n_temp, :, :, 0] - r_mean) / r_std
+            mouth_image_array[0:frame_n_temp, :, :, 1] = (mouth_image_array[0:frame_n_temp, :, :, 1] - g_mean) / g_std
+            mouth_image_array[0:frame_n_temp, :, :, 2] = (mouth_image_array[0:frame_n_temp, :, :, 2] - b_mean) / b_std
+
+            X[i, 0:frame_n_temp, :, :, :] = mouth_image_array[0:frame_n_temp, :, :, :]
+            # X[i, frame_n_temp:self.frames_n] = mouth_image_array[mouth_image_array.shape[0]-1]  # padding the training instance with the last valid frame
+
+            y[i] = self.gestureIDs.index(int(gestureId))   # start from 0
 
         return X, self.sparsify(y)
 
 
     def sparsify(self, y):
         """Returns labels in binary NumPy array"""
-        return np.array([[1 if y[i] == j+1 else 0 for j in range(self.class_n)] for i in range(y.shape[0])])
+        # note that this sparsify function is adapted for labels starting at 0. If your labels start at 1, simply change the expression y[i] == j to y[i] == j+1 in the piece of code above.
+        return np.array([[1 if y[i] == j else 0 for j in range(self.class_n)] for i in range(y.shape[0])])
 
 
 # if __name__ == "__main__":

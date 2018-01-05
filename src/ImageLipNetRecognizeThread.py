@@ -13,7 +13,7 @@ class RecognizeThread:
         self.X = np.zeros(shape=(1, 70, 80, 100, 3), dtype=np.float32)
         self.recognizeDone = False
         self.y_predict = 0
-        self.model = load_model('../resource/2017-12-01_model.h5')
+        self.model = load_model('../resource/model/2017-12-01_model.h5')
         self.model._make_predict_function()
         self.graph = tf.get_default_graph()
         self.model_loaded = True

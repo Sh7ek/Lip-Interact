@@ -5,21 +5,24 @@ from keras.preprocessing import sequence
 import cv2
 from shutil import copyfile
 from random import shuffle
+import traceback
 
 def get_array_data():
     print('get_array_data() start')
-    subjects = ['gyz', 'hpk', 'lyq', 'plh', 'sk', 'swn', 'wrl', 'xwj', 'yzc', 'zq', 'ztx']
+    subjects = ['gyz', 'hpk', 'hy', 'hzr', 'lj', 'll', 'lyq', 'mq',
+                'plh', 'pxy', 'sk', 'swn', 'wn', 'wrl', 'wxy', 'yx',
+                'yyk', 'yzc', 'zjw', 'zmy', 'zq', 'ztx']
     for subject in subjects:
         print(subject)
-        subjectFolder = "../resource/data/" + subject + "/"
-        subjectOutputFolder = "../resource/data_augmented_array/" + subject + "/"
+        subjectFolder = "../resource/data_new/" + subject + "/"
+        subjectOutputFolder = "../resource/data_new_augmented_array/" + subject + "/"
         if not os.path.exists(subjectOutputFolder):
             os.mkdir(subjectOutputFolder)
-        subjectFlipOutputFolder = "../resource/data_augmented_array/" + subject + "_flip/"
+        subjectFlipOutputFolder = "../resource/data_new_augmented_array/" + subject + "_flip/"
         if not os.path.exists(subjectFlipOutputFolder):
             os.mkdir(subjectFlipOutputFolder)
 
-        for gestureId in range(1, 12+1):
+        for gestureId in range(1, 43+1):
             # print("{} {}".format(subject, gestureId))
             subjectGestureFolder = subjectFolder + str(gestureId) + "/"
             subjectGestureOutputFolder = subjectOutputFolder + str(gestureId) + "/"
@@ -32,7 +35,7 @@ def get_array_data():
             if not os.path.isdir(subjectGestureFolder):
                 print("wrong path: " + subjectGestureFolder)
                 exit(100)
-            for fileIndex in range(1, 25):
+            for fileIndex in range(1, 30):
                 image_pkl_file_path = subjectGestureFolder + "frame_" + str(fileIndex) + "_image.pkl"
                 if os.path.isfile(image_pkl_file_path):
                     image_pkl_file = open(image_pkl_file_path, 'rb')
@@ -54,13 +57,9 @@ def get_array_data():
     print('get_array_data() end')
 
 
-def check_array_and_augmented_data():
-    subjects = ['gyz', 'hpk', 'lyq', 'plh', 'sk', 'swn', 'wrl', 'xwj', 'yzc', 'zq', 'ztx']
-    subject = "ztx"
-    gestureId = 6
-    fileIndex = 3
-    image_pkl_output_file_path = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/" + "frame_" + str(fileIndex) + "_image.pkl"
-    image_pkl_flip_output_file_path = "../resource/data_augmented_array/" + subject + "_flip/" + str(gestureId) + "/" + "frame_" + str(fileIndex) + "_image.pkl"
+def check_array_and_augmented_data(subject = 'wxy', gestureId = 6, fileIndex = 3):
+    image_pkl_output_file_path = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/" + "frame_" + str(fileIndex) + "_image.pkl"
+    image_pkl_flip_output_file_path = "../resource/data_new_augmented_array/" + subject + "_flip/" + str(gestureId) + "/" + "frame_" + str(fileIndex) + "_image.pkl"
     if os.path.isfile(image_pkl_output_file_path):
         image_pkl_file = open(image_pkl_output_file_path, 'rb')
         mouth_image_array = pickle.load(image_pkl_file)
@@ -80,7 +79,7 @@ def check_array_and_augmented_data():
             image_flip = mouth_image_flip_array[i]
             cv2.imshow('frame1', image)
             cv2.imshow('frame2', image_flip)
-            cv2.waitKey(40)
+            cv2.waitKey(30)
 
         key = cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -114,23 +113,24 @@ def check_array_and_augmented_data_all():
         file_path = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
         try:
             image_pkl_file = open(file_path, 'rb')
-            mouth_image_array = pickle.load(image_pkl_file).astype(dtype=np.float32)  # frame_n, img_h, img_w, img_c
+            # mouth_image_array = pickle.load(image_pkl_file).astype(dtype=np.float32)  # frame_n, img_h, img_w, img_c
+            mouth_image_array = pickle.load(image_pkl_file)
             image_pkl_file.close()
         except ValueError:
             print(ID)
 
     print("check test done")
 
-def check_array_and_augmented_data_all_one_out(out_name = 'sk'):
-    # create batch generator
-    filename = "../resource/training_list_" + out_name + "_out.txt"
+def check_array_and_augmented_data_all_one_out(out_name = 'wxy', group = 1):
+    outputFolder = '../resource/new_training_testing_list/group_' + str(group) + '/'
+    filename = outputFolder + 'training_list_' + out_name + '_out.txt'
     with open(filename) as f:
         list_IDs = f.readlines()
         list_IDs = [x.strip() for x in list_IDs]
 
     for ID in list_IDs:
         subject, gestureId, filename = ID.split("-")
-        file_path = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
+        file_path = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
         try:
             image_pkl_file = open(file_path, 'rb')
             mouth_image_array = pickle.load(image_pkl_file).astype(dtype=np.float32)  # frame_n, img_h, img_w, img_c
@@ -140,14 +140,14 @@ def check_array_and_augmented_data_all_one_out(out_name = 'sk'):
 
     print("check train done")
 
-    filename = "../resource/testing_list_" + out_name + "_out.txt"
+    filename = outputFolder + 'testing_list_' + out_name + '_out.txt'
     with open(filename) as f:
         list_IDs = f.readlines()
         list_IDs = [x.strip() for x in list_IDs]
 
     for ID in list_IDs:
         subject, gestureId, filename = ID.split("-")
-        file_path = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
+        file_path = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
         try:
             image_pkl_file = open(file_path, 'rb')
             mouth_image_array = pickle.load(image_pkl_file).astype(dtype=np.float32)  # frame_n, img_h, img_w, img_c
@@ -195,18 +195,18 @@ def split_to_training_testing_set(split = 0.8):
     print('** {:40s}'.format('split_to_training_testing_set() end'))
     print('-----------------------------------------')
 
-def split_to_training_testing_set_one_out(out_name = 'sk'):
+def split_to_training_testing_set_one_out(out_name = 'wxy', group = 1, gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
     print('** {:40s}'.format('split_to_training_testing_set() start') )
-    subjects = ['gyz', 'hpk', 'lyq', 'plh', 'sk', 'swn', 'wrl', 'xwj', 'yzc', 'zq', 'ztx']
+    subjects = ['gyz', 'hpk', 'hy', 'hzr', 'lj', 'll', 'lyq', 'mq',
+                'plh', 'pxy', 'sk', 'swn', 'wn', 'wrl', 'wxy', 'yx',
+                'yyk', 'yzc', 'zjw', 'zmy', 'zq', 'ztx']
     subjects_augmented = subjects + [subject + '_flip' for subject in subjects]
     trainingIDs = []
     testingIDs = []
     for subject in subjects_augmented:
         # print(subject)
-        for gestureId in range(1, 12 + 1):
-            if gestureId == 6:
-                continue
-            subject_gesture_dir = "../resource/data_augmented_array/" + subject + "/" + str(gestureId) + "/"
+        for gestureId in gestureIDs:
+            subject_gesture_dir = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/"
             subject_gesture_filenames = []
             for file in os.listdir(subject_gesture_dir):
                 if file.endswith(".pkl"):
@@ -217,11 +217,15 @@ def split_to_training_testing_set_one_out(out_name = 'sk'):
                     else:
                         trainingIDs.append(ID)
 
-    file = open("../resource/training_list_" + out_name + "_out.txt", 'w')
+    outputFolder = '../resource/new_training_testing_list/group_' + str(group) + '/'
+    if not os.path.exists(outputFolder):
+        os.mkdir(outputFolder)
+
+    file = open(outputFolder + 'training_list_' + out_name + '_out.txt', 'w')
     for ID in trainingIDs:
         file.write(ID + "\n")
     file.close()
-    file = open("../resource/testing_list_" + out_name + "_out.txt", 'w')
+    file = open(outputFolder + 'testing_list_' + out_name + '_out.txt', 'w')
     for ID in testingIDs:
         file.write(ID + "\n")
     file.close()
@@ -230,6 +234,25 @@ def split_to_training_testing_set_one_out(out_name = 'sk'):
     print('-----------------------------------------')
 
 if __name__ == "__main__":
-    outman = 'ztx'
-    split_to_training_testing_set_one_out(out_name=outman)
-    check_array_and_augmented_data_all_one_out(out_name=outman)
+    # check_array_and_augmented_data(subject='zmy', gestureId=1, fileIndex=11)
+
+    outman = 'wxy'
+    gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    group = 1  # 1: open apps  2: preferences  3: wechat  4: edit text  5: notification
+    if group == 1:
+        gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif group == 2:
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 18, 42, 43]
+    elif group == 3:
+        gestureIDs = [19, 20, 21, 22, 23, 24, 25, 26]
+    elif group == 4 :
+        gestureIDs = [27, 28, 29, 30, 31, 32, 33, 34, 35]
+    elif group == 5:
+        gestureIDs = [36, 37, 38, 39, 40, 41]
+
+    split_to_training_testing_set_one_out(out_name=outman, group=group, gestureIDs=gestureIDs)
+    check_array_and_augmented_data_all_one_out(out_name=outman, group=group)
+
+
+
+

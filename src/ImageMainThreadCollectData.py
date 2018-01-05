@@ -12,9 +12,8 @@ from src.ImageWrite2FileThread import Write2File
 COLLECT_DATA = True
 USER_ADJUSTED = False  # always false at first
 
-subject = "sk"
-gestureID = 43
-
+subject = "ll"
+gestureID = 19
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("../resource/shape_predictor_68_face_landmarks.dat")
 
@@ -25,9 +24,9 @@ if COLLECT_DATA:
     writeFileThread = Write2File(subject=subject, gestureID=gestureID).start()
 
 cv2.namedWindow("frame");
-cv2.moveWindow("frame", 650, 100);
+cv2.moveWindow("frame", 550, 450);
 cv2.namedWindow("mouth_crop");
-cv2.moveWindow("mouth_crop", 850, 620);
+cv2.moveWindow("mouth_crop", 1350, 600);
 
 last_image = np.zeros(shape=(480, 640, 3), dtype=np.uint8);
 force_detect_face = True
@@ -49,6 +48,13 @@ stable_mouth_crop_right = 0
 stable_mouth_crop_width = 0
 stable_mouth_crop_top = 0
 stable_mouth_crop_height = 0
+stable_mouth_crop_vcenter = 0
+stable_window_len = 6
+stable_mouth_crop_left_deque = deque([], maxlen=stable_window_len)
+stable_mouth_crop_right_deque = deque([], maxlen=stable_window_len)
+stable_mouth_crop_top_deque = deque([], maxlen=stable_window_len)
+stable_mouth_crop_vcenter_deque = deque([], maxlen=stable_window_len)
+
 HORIZANTAL_PAD_RATIO = 0.15
 MOUTH_CROP_WIDTH = 100
 MOUTH_CROP_HEIGHT = 80
@@ -117,15 +123,25 @@ if __name__ == '__main__':
                             gap_max_limit = gap_max_limit * (1 - gap_max_update_alpha) + meanGap * 2 * gap_max_update_alpha
                             speakingState = 0
                             # get mouth crop image on original image
-                            stable_mouth_crop_left = int(mouth_x - mouth_w * HORIZANTAL_PAD_RATIO)
-                            stable_mouth_crop_right = int(mouth_x + mouth_w * (1 + HORIZANTAL_PAD_RATIO))
+                            stable_mouth_crop_left_temp = int(mouth_x - mouth_w * HORIZANTAL_PAD_RATIO)
+                            stable_mouth_crop_right_temp = int(mouth_x + mouth_w * (1 + HORIZANTAL_PAD_RATIO))
+                            stable_mouth_crop_vcenter_temp = mouth_y + mouth_h/2
+                            stable_mouth_crop_left_deque.append(stable_mouth_crop_left_temp)
+                            stable_mouth_crop_right_deque.append(stable_mouth_crop_right_temp)
+                            stable_mouth_crop_vcenter_deque.append(stable_mouth_crop_vcenter_temp)
+
+                            # stable_mouth_crop_left = int(sum(stable_mouth_crop_left_deque)/len(stable_mouth_crop_left_deque))
+                            # stable_mouth_crop_right = int(sum(stable_mouth_crop_right_deque) / len(stable_mouth_crop_right_deque))
+                            stable_mouth_crop_left = stable_mouth_crop_left_deque[0]
+                            stable_mouth_crop_right = stable_mouth_crop_right_deque[0]
+                            stable_mouth_crop_vcenter = stable_mouth_crop_vcenter_deque[0]
                             stable_mouth_crop_width = stable_mouth_crop_right - stable_mouth_crop_left
                             stable_mouth_crop_height = int(round(stable_mouth_crop_width * float(MOUTH_CROP_HEIGHT)/float(MOUTH_CROP_WIDTH)))
-                            stable_mouth_crop_top = int(round(mouth_y + mouth_h/2 - stable_mouth_crop_height * 0.36))
+                            stable_mouth_crop_top = int(round(stable_mouth_crop_vcenter - stable_mouth_crop_height * 0.36))
                     # If the user is speaking
                     else:
                         # If the user stops speaking
-                        if maxGap < min(gap_max_limit, 0.1) and stdGap < gap_std_limit:  # has stopped speaking
+                        if (maxGap < min(gap_max_limit, 0.1) or maxGap < 0.04) and stdGap < gap_std_limit*0.6:  # has stopped speaking
                             # end_speaking_index = i
                             isSpeaking = False
                             gap_max_limit = meanGap * 2
@@ -135,7 +151,15 @@ if __name__ == '__main__':
                             stable_mouth_crop_right = int(mouth_x + mouth_w * (1 + HORIZANTAL_PAD_RATIO))
                             stable_mouth_crop_width = stable_mouth_crop_right - stable_mouth_crop_left
                             stable_mouth_crop_height = int(round(stable_mouth_crop_width * float(MOUTH_CROP_HEIGHT)/float(MOUTH_CROP_WIDTH)))
-                            stable_mouth_crop_top = int(round(mouth_y + mouth_h / 2 - stable_mouth_crop_height * 0.36))
+                            stable_mouth_crop_vcenter = mouth_y + mouth_h/2
+                            stable_mouth_crop_top = int(round(stable_mouth_crop_vcenter- stable_mouth_crop_height * 0.36))
+
+                            stable_mouth_crop_left_deque.clear()
+                            stable_mouth_crop_right_deque.clear()
+                            stable_mouth_crop_vcenter_deque.clear()
+                            stable_mouth_crop_left_deque.append(stable_mouth_crop_left)
+                            stable_mouth_crop_right_deque.append(stable_mouth_crop_right)
+                            stable_mouth_crop_vcenter_deque.append(stable_mouth_crop_vcenter)
                         # the user continues speaking
                         else:
                             speakingState = 2
@@ -205,7 +229,7 @@ if __name__ == '__main__':
                     cv2.circle(image, (x, y), 2, (255, 255, 255), -1)
                 fps.update()
 
-            cv2.putText(image, str(count), (50, 100), cv2.FONT_HERSHEY_COMPLEX, 2, (255, 0, 0), 2, cv2.LINE_AA)
+            cv2.putText(image, str(count), (50, 100), cv2.FONT_HERSHEY_COMPLEX, 2, (0, 255, 0), 2, cv2.LINE_AA)
             cv2.imshow('frame', image)
             # Press Q on keyboard to stop
             # Press F on keyboard to force face re-detection on the next frame
