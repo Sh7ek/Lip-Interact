@@ -3,7 +3,7 @@ import cv2
 from time import sleep
 import os
 
-outputFolder = "../resource/data_new/ztx/43/"
+outputFolder = "../resource/data_new/zq/20/"
 
 cv2.namedWindow("frame")
 cv2.moveWindow("frame", 700, 400)

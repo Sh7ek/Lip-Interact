@@ -1,11 +1,9 @@
 import pprint, pickle
 import os
 import numpy as np
-from keras.preprocessing import sequence
 import cv2
-from shutil import copyfile
 from random import shuffle
-import traceback
+import sys
 
 def get_array_data():
     print('get_array_data() start')
@@ -222,10 +220,12 @@ def split_to_training_testing_set_one_out(out_name = 'wxy', group = 1, gestureID
         os.mkdir(outputFolder)
 
     file = open(outputFolder + 'training_list_' + out_name + '_out.txt', 'w')
+    print(file.name)
     for ID in trainingIDs:
         file.write(ID + "\n")
     file.close()
     file = open(outputFolder + 'testing_list_' + out_name + '_out.txt', 'w')
+    print(file.name)
     for ID in testingIDs:
         file.write(ID + "\n")
     file.close()
@@ -236,22 +236,36 @@ def split_to_training_testing_set_one_out(out_name = 'wxy', group = 1, gestureID
 if __name__ == "__main__":
     # check_array_and_augmented_data(subject='zmy', gestureId=1, fileIndex=11)
 
-    outman = 'wxy'
+    outman = ''
     gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    group = 1  # 1: open apps  2: preferences  3: wechat  4: edit text  5: notification
+    group = 9  # 1: open apps  2: preferences  3: wechat  4: edit text  5: notification
+
+    if len(sys.argv) == 3:
+        print(str(sys.argv))
+        group = int(sys.argv[1])
+        outman = sys.argv[2]
+
     if group == 1:
         gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     elif group == 2:
-        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 18, 42, 43]
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 42, 43]
     elif group == 3:
-        gestureIDs = [19, 20, 21, 22, 23, 24, 25, 26]
+        gestureIDs = [19, 20, 22, 23, 24, 25, 26]
     elif group == 4 :
-        gestureIDs = [27, 28, 29, 30, 31, 32, 33, 34, 35]
+        gestureIDs = [27, 28, 29, 30, 31, 33, 34, 35]
     elif group == 5:
         gestureIDs = [36, 37, 38, 39, 40, 41]
+    elif group == 6:
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 42, 43, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    elif group == 7:
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 42, 43, 19, 20, 22, 23, 24, 25, 26]
+    elif group == 8:
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 42, 43, 27, 28, 29, 30, 31, 33, 34, 35]
+    elif group == 9:
+        gestureIDs = [11, 12, 13, 14, 15, 16, 17, 42, 43, 36, 37]
 
     split_to_training_testing_set_one_out(out_name=outman, group=group, gestureIDs=gestureIDs)
-    check_array_and_augmented_data_all_one_out(out_name=outman, group=group)
+    # check_array_and_augmented_data_all_one_out(out_name=outman, group=group)
 
 
 

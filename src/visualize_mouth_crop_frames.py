@@ -2,42 +2,28 @@ import pprint, pickle
 import cv2
 from time import sleep
 
-outputFolder = "../resource/data/xwj/2/"
-outputFileIndex = 10
-image_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_image.pkl", 'rb')
+ID = 'gyz_flip-42-frame_8_image.pkl'
+subject, gestureId, filename = ID.split("-")
+file_path = "../resource/data_new_augmented_array/" + subject + "/" + str(gestureId) + "/" + filename
+
+image_pkl_file = open(file_path, 'rb')
 mouth_image_list = pickle.load(image_pkl_file)
 image_pkl_file.close()
 
-lip_pkl_file = open(outputFolder + "frame_" + str(outputFileIndex) + "_lip.pkl", 'rb')
-mouth_lip_list = pickle.load(lip_pkl_file)
-lip_pkl_file.close()
 
 cv2.namedWindow("frame");
 cv2.moveWindow("frame", 1000, 400);
 
 print(len(mouth_image_list))
-print(len(mouth_lip_list))
 
 i = 0
 while True:
     image = mouth_image_list[i][:]
-    lip = mouth_lip_list[i]
-
-    for (x, y) in lip:
-        cv2.circle(image, (int(x), int(y)), 1, (255, 255, 255), -1)
-
     cv2.imshow('frame', image)
-
-    sleep(0.04)
-    key = cv2.waitKey(1) & 0xFF
+    key = cv2.waitKey(30) & 0xFF
     i = min(len(mouth_image_list) - 1, i + 1)
 
-    # key = cv2.waitKey(0) & 0xFF
-    if key == ord('j'):
-        i = max(0, i-1)
-    elif key == ord('k'):
-        i = min(len(mouth_image_list)-1, i+1)
-    elif key == ord('q'):
+    if key == ord('q'):
         break
 
 cv2.destroyAllWindows()
