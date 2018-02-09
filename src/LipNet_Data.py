@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     outman = ''
     gestureIDs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    group = 9  # 1: open apps  2: preferences  3: wechat  4: edit text  5: notification
+    group = 8  # 1: open apps  2: preferences  3: wechat  4: edit text  5: notification
 
     if len(sys.argv) == 3:
         print(str(sys.argv))

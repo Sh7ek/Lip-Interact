@@ -1,6 +1,5 @@
 from threading import Thread
-from SocketServer import SocketServer
-from Context import Context
+from src.SocketServer import SocketServer
 
 class RecognizeTestThread:
 	def __init__(self, socketServer):

@@ -5,6 +5,8 @@ class WebCamVideoStream:
 	def __init__(self, src=0):
 		self.stream = cv2.VideoCapture(src)
 		(self.grabbed, self.frame) = self.stream.read()
+		fps = self.stream.get(cv2.CAP_PROP_FPS)
+		print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
 		self.stopped = False
 		self.stream.set(3, 640)
 		self.stream.set(4, 480)
